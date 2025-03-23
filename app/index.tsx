@@ -1,11 +1,11 @@
 import { registerRootComponent } from "expo";
 import React from "react";
-import HomeScreen from "./screens/HomeScreen";
+import ActivityScreen from "./screens/ActivityScreen";
 import { View } from "react-native";
 
 const App = () => (
   <View>
-    <HomeScreen />
+    <ActivityScreen />
   </View>
 );
 export default App;
