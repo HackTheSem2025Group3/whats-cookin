@@ -52,12 +52,16 @@ const ActivityScreen = () => {
           </Pressable>
         ))}
       </View>
+      <Pressable style={styles.nextButton} onPress={() => console.log('Next button pressed')}>
+        <Text style={styles.nextButtonText}>Next</Text>
+      </Pressable>
     </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
+    flexGrow: 1,
     paddingVertical: 40,
     alignItems: 'center',
     backgroundColor: 'white',
@@ -81,12 +85,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'center',
-    gap: 20,
   },
   activityItem: {
     alignItems: 'center',
     margin: 10,
-    padding: 10,
+    marginHorizontal: 10,
+    marginVertical: 10,
     borderRadius: 20,
     backgroundColor: '#f9f9f9',
   },
@@ -100,6 +104,19 @@ const styles = StyleSheet.create({
     marginTop: 5,
     fontWeight: '600',
   },
+  nextButton: {
+    marginTop: 30,
+    backgroundColor: '#4CAF50',
+    paddingVertical: 15,
+    paddingHorizontal: 40,
+    borderRadius: 25,
+    alignItems: 'center',
+  },
+  nextButtonText: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: 'bold',
+  }
 });
 
 export default ActivityScreen;
