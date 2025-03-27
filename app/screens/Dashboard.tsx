@@ -1,26 +1,36 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Pressable, ScrollView, FlatList, Modal, TextInput } from 'react-native';
 import moment from 'moment';
+import axios from 'axios';
+import './AddDishModal'
 
-const Scheduler = () => {
+interface Meals {
+  [date: string]: {
+    Breakfast: Dish[];
+    Lunch: Dish[];
+    Dinner: Dish[];
+  };
+}
+
+interface Dish {
+  name: string;
+  ingredients: string[];
+  calories: number;
+}
+
+const Dashboard = () => {
   const [selectedDate, setSelectedDate] = useState(moment().format('YYYY-MM-DD')); // Default to today's date
   const [currentWeek, setCurrentWeek] = useState<string[]>([]);
   const [showCalendar, setShowCalendar] = useState(false); // Modal visibility for calendar
   const [currentMonth, setCurrentMonth] = useState(moment().month()); // Current month index
   const [currentYear, setCurrentYear] = useState(moment().year()); // Current year
-  const [mealInput, setMealInput] = useState('');
+
   const [showMealModal, setShowMealModal] = useState(false);
   const [currentMealType, setCurrentMealType] = useState('');
-
-  interface Meals {
-    [date: string]: {
-      Breakfast: string;
-      Lunch: string;
-      Dinner: string;
-    };
-  }
-
   const [meals, setMeals] = useState<Meals>({});
+  const [dishName, setDishName] = useState('');
+  const [ingredients, setIngredients] = useState<string[]>([]);
+  const [calories, setCalories] = useState<number | null>(null);
 
   // Generate the current week dynamically
   useEffect(() => {
@@ -40,16 +50,37 @@ const Scheduler = () => {
     setShowMealModal(true);
   };
 
-  const saveMeal = () => {
+  const saveMeal = (dish: Dish) => {
     setMeals((prevMeals) => ({
       ...prevMeals,
       [selectedDate]: {
         ...prevMeals[selectedDate],
-        [currentMealType]: mealInput,
+        [currentMealType]: [
+          ...(prevMeals[selectedDate]?.[currentMealType] || []),
+          dish,
+        ],
       },
     }));
-    setMealInput('');
+    setDishName('');
+    setIngredients([]);
+    setCalories(null);
     setShowMealModal(false);
+  };
+
+  const calculateCalories = async () => {
+    try {
+      const response = await axios.post('https://api.openai.com/v1/calories', {
+        dishName,
+        ingredients,
+      });
+      setCalories(response.data.calories);
+    } catch (error) {
+      console.error('Error calculating calories:', error);
+    }
+  };
+
+  const addIngredient = (ingredient: string) => {
+    setIngredients((prev) => [...prev, ingredient]);
   };
 
   const handleMonthChange = (increment: number) => {
@@ -166,7 +197,8 @@ const Scheduler = () => {
         <View key={index} style={styles.mealSection}>
           <Text style={styles.mealTitle}>{meal}</Text>
           <Text style={styles.mealContent}>
-            {meals[selectedDate]?.[meal] || `No ${meal} added for ${moment(selectedDate).format('MMMM D')}`}
+            {meals[selectedDate]?.[meal]?.map((dish) => dish.name).join(', ') ||
+              `No ${meal} added for ${moment(selectedDate).format('MMMM D')}`}
           </Text>
           <Pressable style={styles.addButton} onPress={() => handleAddMeal(meal)}>
             <Text style={styles.addButtonText}>+ Add {meal}</Text>
@@ -188,12 +220,32 @@ const Scheduler = () => {
             <Text style={styles.modalHeader}>Add {currentMealType}</Text>
             <TextInput
               style={styles.input}
-              placeholder={`Enter your ${currentMealType}`}
-              value={mealInput}
-              onChangeText={setMealInput}
+              placeholder="Dish Name"
+              placeholderTextColor="#A9A9A9"
+              value={dishName}
+              onChangeText={setDishName}
             />
-            <Pressable style={styles.saveButton} onPress={saveMeal}>
-              <Text style={styles.saveButtonText}>Save</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Add Ingredient"
+              placeholderTextColor="#A9A9A9"
+              onSubmitEditing={(e) => addIngredient(e.nativeEvent.text)}
+            />
+            <View>
+              {ingredients.map((ingredient, index) => (
+                <Text key={index} style={styles.ingredientText}>
+                  {ingredient}
+                </Text>
+              ))}
+            </View>
+            <Pressable style={styles.calculateButton} onPress={calculateCalories}>
+              <Text style={styles.calculateButtonText}>Calculate Calories</Text>
+            </Pressable>
+            {calories !== null && (
+              <Text style={styles.caloriesText}>Calories: {calories}</Text>
+            )}
+            <Pressable style={styles.saveButton} onPress={() => saveMeal({ name: dishName, ingredients, calories: calories || 0 })}>
+              <Text style={styles.saveButtonText}>Add Dish</Text>
             </Pressable>
           </View>
         </View>
@@ -327,6 +379,7 @@ const styles = StyleSheet.create({
     padding: 10,
     marginBottom: 20,
     fontSize: 16,
+    color: 'black',
   },
   saveButton: {
     backgroundColor: '#6E2F2C',
@@ -375,6 +428,52 @@ const styles = StyleSheet.create({
   selectedCalendarDayText: {
     color: 'white',
   },
+  ingredientText: {
+    fontSize: 16,
+    color: '#4A4A4A',
+    marginVertical: 5,
+  },
+  calculateButton: {
+    backgroundColor: '#6E2F2C',
+    padding: 10,
+    borderRadius: 5,
+    alignItems: 'center',
+    marginVertical: 10,
+  },
+  calculateButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  caloriesText: {
+    fontSize: 16,
+    color: '#4A4A4A',
+    marginVertical: 10,
+  },
+  groceryButton: {
+    backgroundColor: '#4CAF50',
+    padding: 10,
+    borderRadius: 5,
+    alignItems: 'center',
+    marginVertical: 10,
+  },
+  groceryButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  recommendationButton: {
+    backgroundColor: '#2196F3',
+    padding: 10,
+    borderRadius: 5,
+    alignItems: 'center',
+    marginVertical: 10,
+  },
+  recommendationButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
 });
 
-export default Scheduler;
+export default Dashboard;
