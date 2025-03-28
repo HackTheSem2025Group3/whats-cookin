@@ -1,0 +1,99 @@
+import React, { useState } from 'react';
+import { View, Text, FlatList, StyleSheet, Image, Dimensions } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+
+interface Meal {
+  id: string;
+  name: string;
+  image: string;
+  kcal: number;
+  mins: number;
+}
+
+const meals: Meal[] = [
+  {
+    id: '1',
+    name: 'Grilled Chicken Salad',
+    image: 'https://cdn.pixabay.com/photo/2017/01/31/20/08/salad-2022752_1280.jpg',
+    kcal: 350,
+    mins: 20,
+  },
+  {
+    id: '2',
+    name: 'Avocado Toast with Egg',
+    image: 'https://cdn.pixabay.com/photo/2017/12/09/08/18/eggs-3003578_960_720.jpg',
+    kcal: 280,
+    mins: 10,
+  },
+  {
+    id: '3',
+    name: 'Vegan Buddha Bowl',
+    image: 'https://cdn.pixabay.com/photo/2018/06/18/16/05/salad-3482749_1280.jpg',
+    kcal: 400,
+    mins: 25,
+  },
+];
+
+const { width } = Dimensions.get('window');
+
+export default function MealRecommend() {
+  return (
+    <SafeAreaView style={styles.safeArea}>
+      <Text style={styles.header}>🍽️ Today's Meal Recommendations</Text>
+      <FlatList
+        data={meals}
+        horizontal
+        pagingEnabled
+        keyExtractor={(item) => item.id}
+        showsHorizontalScrollIndicator={false}
+        renderItem={({ item }) => (
+          <View style={styles.card}>
+            <Image source={{ uri: item.image }} style={styles.image} />
+            <Text style={styles.name}>{item.name}</Text>
+            <Text style={styles.info}>{item.kcal} kcal ・ {item.mins} min</Text>
+          </View>
+        )}
+      />
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#fff',
+    paddingTop: 40,
+  },
+  header: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#5c2b26',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  card: {
+    width: width - 60,
+    marginHorizontal: 30,
+    backgroundColor: '#f3eeee',
+    borderRadius: 16,
+    padding: 20,
+    alignItems: 'center',
+  },
+  image: {
+    width: '100%',
+    height: 200,
+    borderRadius: 14,
+    marginBottom: 16,
+  },
+  name: {
+    fontSize: 20,
+    fontWeight: '700',
+    marginBottom: 6,
+    color: '#333',
+    textAlign: 'center',
+  },
+  info: {
+    fontSize: 16,
+    color: '#666',
+  },
+});
