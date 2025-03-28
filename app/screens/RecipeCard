@@ -1,0 +1,92 @@
+import React from 'react';
+import { View, Text, StyleSheet, Image, ScrollView } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+
+export default function RecipeCard() {
+  const recipe = {
+    title: 'Creamy Tomato Pasta',
+    image: 'https://cdn.pixabay.com/photo/2017/05/07/08/56/pasta-2290814_1280.jpg',
+    description: 'A delicious and creamy tomato pasta made with fresh ingredients and love.',
+    ingredients: [
+      '200g pasta',
+      '1 cup tomato sauce',
+      '1/2 cup cream',
+      '2 garlic cloves',
+      'Salt & pepper',
+      'Basil leaves',
+    ],
+    instructions: [
+      'Boil pasta until al dente.',
+      'In a pan, sauté garlic in olive oil.',
+      'Add tomato sauce and cream, simmer for 5 minutes.',
+      'Add cooked pasta, mix well.',
+      'Top with basil leaves and serve hot.',
+    ],
+  };
+
+  return (
+    <SafeAreaView style={styles.safeArea}>
+      <ScrollView contentContainerStyle={styles.container}>
+        <Image source={{ uri: recipe.image }} style={styles.image} />
+        <Text style={styles.title}>{recipe.title}</Text>
+        <Text style={styles.description}>{recipe.description}</Text>
+
+        <Text style={styles.sectionTitle}>🧂 Ingredients</Text>
+        {recipe.ingredients.map((item, index) => (
+          <Text key={index} style={styles.text}>• {item}</Text>
+        ))}
+
+        <Text style={styles.sectionTitle}>📖 Instructions</Text>
+        {recipe.instructions.map((step, index) => (
+          <Text key={index} style={styles.text}>{index + 1}. {step}</Text>
+        ))}
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#fff',
+  },
+  container: {
+    padding: 20,
+    paddingBottom: 40,
+  },
+  image: {
+    width: '100%',
+    height: 220,
+    borderRadius: 16,
+    marginBottom: 20,
+  },
+  title: {
+    fontSize: 26,
+    fontWeight: '800',
+    color: '#5c2b26',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  description: {
+    fontSize: 16,
+    color: '#555',
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    marginTop: 20,
+    marginBottom: 12,
+    backgroundColor: '#f3eeee',
+    padding: 8,
+    borderRadius: 6,
+    textAlign: 'center',
+    color: '#5c2b26',
+  },
+  text: {
+    fontSize: 16,
+    color: '#333',
+    marginBottom: 8,
+  },
+});
