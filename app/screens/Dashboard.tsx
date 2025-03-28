@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Pressable, ScrollView, FlatList, Modal, TextInput } from 'react-native';
 import moment from 'moment';
 import axios from 'axios';
-import './AddDishModal'
+// import './AddDishModal'
+import MainMenu from './MainMenu';
 
 interface Meals {
   [date: string]: {
@@ -141,14 +142,16 @@ const Dashboard = () => {
   };
 
   return (
+    <View style={styles.container}>
     <ScrollView contentContainerStyle={styles.container}>
+        <MainMenu/>
       {/* Header */}
-      <View style={styles.header}>
+      {/* <View style={styles.header}>
         <Text style={styles.appName}>Whats Cookin</Text>
         <Pressable style={styles.profileIcon}>
           <Text style={styles.profileText}>🔍</Text>
         </Pressable>
-      </View>
+      </View> */}
 
       {/* Month and Year */}
       <Pressable onPress={() => setShowCalendar(true)}>
@@ -174,7 +177,6 @@ const Dashboard = () => {
           >
             <Text
               style={[
-                styles.dateText,
                 selectedDate === item ? styles.selectedDateText : styles.unselectedDateText, // Change text color dynamically
               ]}
             >
@@ -251,6 +253,7 @@ const Dashboard = () => {
         </View>
       </Modal>
     </ScrollView>
+    </View>
   );
 };
 
@@ -258,7 +261,7 @@ const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
     backgroundColor: '#F9F9F9',
-    padding: 20,
+    padding: 10,
   },
   header: {
     flexDirection: 'row',

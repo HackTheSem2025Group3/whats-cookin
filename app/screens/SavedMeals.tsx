@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, FlatList, StyleSheet, Image, TouchableOpacity } from 'react-native';
-
+import MainMenu from './MainMenu';
 interface Meal {
   id: string;
   name: string;
@@ -68,7 +68,8 @@ export default function SavedMeals() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>🍱 Saved Meals</Text>
+      {/* <Text style={styles.title}>🍱 Saved Meals</Text> */}
+      <MainMenu/>
       <FlatList
         data={meals}
         keyExtractor={(item) => item.id}
@@ -83,6 +84,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
+    padding: 10 ,
   },
   title: {
     backgroundColor: '#f3eeee',
@@ -100,6 +102,10 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     marginBottom: 20,
     overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
     elevation: 3,
   },
   image: {
