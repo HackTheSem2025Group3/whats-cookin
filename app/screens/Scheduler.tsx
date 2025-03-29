@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Pressable, ScrollView, FlatList, Modal, TextInput } from 'react-native';
+import { View, Text, StyleSheet, Pressable, ScrollView, FlatList, Modal, TextInput, ActivityIndicator } from 'react-native';
 import moment from 'moment';
+import { saveUserData } from '../services/userService'; // Import the userService
+import { User } from '../../shared/types/User'; 
 
 const Scheduler = () => {
   const [selectedDate, setSelectedDate] = useState(moment().format('YYYY-MM-DD')); // Default to today's date
@@ -11,6 +13,8 @@ const Scheduler = () => {
   const [mealInput, setMealInput] = useState('');
   const [showMealModal, setShowMealModal] = useState(false);
   const [currentMealType, setCurrentMealType] = useState('');
+  const [testResult, setTestResult] = useState<string>('');
+  const [testLoading, setTestLoading] = useState(false);
 
   interface Meals {
     [date: string]: {
@@ -109,6 +113,33 @@ const Scheduler = () => {
     );
   };
 
+  const testMongoConnection = async () => {
+    setTestLoading(true);
+    setTestResult('');
+    try {
+      const testUser: User = {
+        name: 'Test User1',
+        email: `test${Date.now()}@gmail.com`, // Unique email to avoid duplicates
+        activityLevel: "Sedentary" // Ensure this matches the allowed string literal type
+      };
+      
+      const response = await saveUserData(testUser);
+      setTestResult(`Success! Created user with ID: ${response._id}`);
+      console.log('Connection test succeeded:', response);
+    } catch (error: any) {
+      if (error.message.includes('Network Error')) {
+        setTestResult('Error: Cannot connect to the backend server. Make sure your Express server is running.');
+      } else if (error.response) {
+        setTestResult(`Server responded with error: ${error.response.status} - ${error.response.data.message || 'Unknown error'}`);
+      } else {
+        setTestResult(`Error: ${error.message}`);
+      }
+      console.error('Connection test failed:', error);
+    } finally {
+      setTestLoading(false);
+    }
+  };
+
   return (
     <ScrollView contentContainerStyle={styles.container}>
       {/* Header */}
@@ -143,7 +174,7 @@ const Scheduler = () => {
           >
             <Text
               style={[
-                styles.dateText,
+                styles.dayText,
                 selectedDate === item ? styles.selectedDateText : styles.unselectedDateText, // Change text color dynamically
               ]}
             >
@@ -162,17 +193,41 @@ const Scheduler = () => {
       />
 
       {/* Meal Sections */}
-      {['Breakfast', 'Lunch', 'Dinner'].map((meal, index) => (
+      {(['Breakfast', 'Lunch', 'Dinner'] as Array<keyof Meals[string]>).map((meal, index) => (
         <View key={index} style={styles.mealSection}>
           <Text style={styles.mealTitle}>{meal}</Text>
           <Text style={styles.mealContent}>
-            {meals[selectedDate]?.[meal] || `No ${meal} added for ${moment(selectedDate).format('MMMM D')}`}
+            {meals[selectedDate]?.[meal as keyof Meals[string]] || `No ${meal} added for ${moment(selectedDate).format('MMMM D')}`}
           </Text>
           <Pressable style={styles.addButton} onPress={() => handleAddMeal(meal)}>
             <Text style={styles.addButtonText}>+ Add {meal}</Text>
           </Pressable>
         </View>
       ))}
+
+      {/* MongoDB Connection Test Section */}
+      <View style={styles.testSection}>
+        <Text style={styles.testSectionTitle}>Backend Connection Test</Text>
+        <Pressable 
+          style={styles.testButton}
+          onPress={testMongoConnection}
+          disabled={testLoading}
+        >
+          <Text style={styles.testButtonText}>
+            {testLoading ? 'Testing Connection...' : 'Test MongoDB Connection'}
+          </Text>
+        </Pressable>
+        
+        {testLoading && (
+          <ActivityIndicator style={styles.testLoading} color="#6E2F2C" />
+        )}
+        
+        {testResult !== '' && (
+          <View style={styles.testResultContainer}>
+            <Text style={styles.testResultText}>{testResult}</Text>
+          </View>
+        )}
+      </View>
 
       {/* Calendar Modal */}
       <Modal visible={showCalendar} animationType="slide" transparent={true}>
@@ -272,10 +327,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     padding: 20,
     marginBottom: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
     elevation: 2,
   },
   mealTitle: {
@@ -374,6 +426,44 @@ const styles = StyleSheet.create({
   },
   selectedCalendarDayText: {
     color: 'white',
+  },
+  testSection: {
+    backgroundColor: 'white',
+    borderRadius: 10,
+    padding: 20,
+    marginTop: 20,
+    marginBottom: 40,
+    elevation: 2,
+  },
+  testSectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#4A4A4A',
+    marginBottom: 15,
+  },
+  testButton: {
+    backgroundColor: '#6E2F2C',
+    padding: 12,
+    borderRadius: 5,
+    alignItems: 'center',
+  },
+  testButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  testLoading: {
+    marginTop: 15,
+  },
+  testResultContainer: {
+    backgroundColor: '#F5F5F5',
+    padding: 15,
+    borderRadius: 5,
+    marginTop: 15,
+  },
+  testResultText: {
+    fontSize: 14,
+    color: '#4A4A4A',
   },
 });
 

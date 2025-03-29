@@ -1,8 +1,8 @@
 import axios from 'axios';
-import { User } from '../../backend/models/User';
+import { User } from '../../shared/types/User';
 
-// Replace with your actual MongoDB API endpoint
-const API_URL = 'https://your-api-endpoint.com/api';
+// MongoDB API URL
+const API_URL = 'http://localhost:8000/api';
 
 /**
  * Save user data to MongoDB
@@ -60,4 +60,11 @@ export const calculateCalorieGoal = (weight: string, activityLevel: string): num
   }
   
   return Math.round(weightNum * 10 * multiplier);
+};
+
+export default {
+  saveUserData,
+  getUserData,
+  updateUserData,
+  calculateCalorieGoal
 };

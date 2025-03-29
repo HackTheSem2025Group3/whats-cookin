@@ -3,15 +3,19 @@
   "compilerOptions": {
     "strict": true,
     "paths": {
-      "@/*": [
-        "./*"
-      ]
+      "@/*": ["./*"],
+      "@shared/*": ["../shared/*"]
     }
   },
   "include": [
     "**/*.ts",
     "**/*.tsx",
     ".expo/types/**/*.ts",
-    "expo-env.d.ts"
+    "expo-env.d.ts",
+    "shared/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "backend/**/*"
   ]
 }
