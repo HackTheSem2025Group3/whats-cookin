@@ -1,37 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Pressable, ScrollView, FlatList, Modal, TextInput, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, Pressable, ScrollView, FlatList, Modal, TextInput } from 'react-native';
 import moment from 'moment';
-import { saveUserData } from '../services/userService'; // Import the userService
-import { User } from '../../shared/types/User'; 
-import axios from 'axios';
-// import './AddDishModal'
-import MainMenu from './MainMenu';
 
-interface Meals {
-  [date: string]: {
-    Breakfast: Dish[];
-    Lunch: Dish[];
-    Dinner: Dish[];
-  };
-}
-
-interface Dish {
-  name: string;
-  ingredients: string[];
-  calories: number;
-}
-
-const Dashboard = () => {
+const Scheduler = () => {
   const [selectedDate, setSelectedDate] = useState(moment().format('YYYY-MM-DD')); // Default to today's date
   const [currentWeek, setCurrentWeek] = useState<string[]>([]);
   const [showCalendar, setShowCalendar] = useState(false); // Modal visibility for calendar
   const [currentMonth, setCurrentMonth] = useState(moment().month()); // Current month index
   const [currentYear, setCurrentYear] = useState(moment().year()); // Current year
-
+  const [mealInput, setMealInput] = useState('');
   const [showMealModal, setShowMealModal] = useState(false);
   const [currentMealType, setCurrentMealType] = useState('');
-  const [testResult, setTestResult] = useState<string>('');
-  const [testLoading, setTestLoading] = useState(false);
 
   interface Meals {
     [date: string]: {
@@ -42,9 +21,6 @@ const Dashboard = () => {
   }
 
   const [meals, setMeals] = useState<Meals>({});
-  const [dishName, setDishName] = useState('');
-  const [ingredients, setIngredients] = useState<string[]>([]);
-  const [calories, setCalories] = useState<number | null>(null);
 
   // Generate the current week dynamically
   useEffect(() => {
@@ -64,37 +40,16 @@ const Dashboard = () => {
     setShowMealModal(true);
   };
 
-  const saveMeal = (dish: Dish) => {
+  const saveMeal = () => {
     setMeals((prevMeals) => ({
       ...prevMeals,
       [selectedDate]: {
         ...prevMeals[selectedDate],
-        [currentMealType]: [
-          ...(prevMeals[selectedDate]?.[currentMealType as keyof Meals[string]] || []),
-          dish,
-        ],
+        [currentMealType]: mealInput,
       },
     }));
-    setDishName('');
-    setIngredients([]);
-    setCalories(null);
+    setMealInput('');
     setShowMealModal(false);
-  };
-
-  const calculateCalories = async () => {
-    try {
-      const response = await axios.post('https://api.openai.com/v1/calories', {
-        dishName,
-        ingredients,
-      });
-      setCalories(response.data.calories);
-    } catch (error) {
-      console.error('Error calculating calories:', error);
-    }
-  };
-
-  const addIngredient = (ingredient: string) => {
-    setIngredients((prev) => [...prev, ingredient]);
   };
 
   const handleMonthChange = (increment: number) => {
@@ -154,44 +109,15 @@ const Dashboard = () => {
     );
   };
 
-  const testMongoConnection = async () => {
-    setTestLoading(true);
-    setTestResult('');
-    try {
-      const testUser: User = {
-        name: 'Test User1',
-        email: `test${Date.now()}@gmail.com`, 
-        activityLevel: "Sedentary" 
-      };
-      
-      const response = await saveUserData(testUser);
-      setTestResult(`Success! Created user with ID: ${response._id}`);
-      console.log('Connection test succeeded:', response);
-    } catch (error: any) {
-      if (error.message.includes('Network Error')) {
-        setTestResult('Error: Cannot connect to the backend server. Make sure your Express server is running.');
-      } else if (error.response) {
-        setTestResult(`Server responded with error: ${error.response.status} - ${error.response.data.message || 'Unknown error'}`);
-      } else {
-        setTestResult(`Error: ${error.message}`);
-      }
-      console.error('Connection test failed:', error);
-    } finally {
-      setTestLoading(false);
-    }
-  };
-
   return (
-    <View style={styles.container}>
     <ScrollView contentContainerStyle={styles.container}>
-        <MainMenu/>
       {/* Header */}
-      {/* <View style={styles.header}>
+      <View style={styles.header}>
         <Text style={styles.appName}>Whats Cookin</Text>
         <Pressable style={styles.profileIcon}>
           <Text style={styles.profileText}>🔍</Text>
         </Pressable>
-      </View> */}
+      </View>
 
       {/* Month and Year */}
       <Pressable onPress={() => setShowCalendar(true)}>
@@ -236,7 +162,7 @@ const Dashboard = () => {
       />
 
       {/* Meal Sections */}
-      {(['Breakfast', 'Lunch', 'Dinner'] as Array<keyof Meals[string]>).map((meal, index) => (
+      {['Breakfast', 'Lunch', 'Dinner'].map((meal, index) => (
         <View key={index} style={styles.mealSection}>
           <Text style={styles.mealTitle}>{meal}</Text>
           <Text style={styles.mealContent}>
@@ -247,30 +173,6 @@ const Dashboard = () => {
           </Pressable>
         </View>
       ))}
-
-      {/* MongoDB Connection Test Section */}
-      <View style={styles.testSection}>
-        <Text style={styles.testSectionTitle}>Backend Connection Test</Text>
-        <Pressable 
-          style={styles.testButton}
-          onPress={testMongoConnection}
-          disabled={testLoading}
-        >
-          <Text style={styles.testButtonText}>
-            {testLoading ? 'Testing Connection...' : 'Test MongoDB Connection'}
-          </Text>
-        </Pressable>
-        
-        {testLoading && (
-          <ActivityIndicator style={styles.testLoading} color="#6E2F2C" />
-        )}
-        
-        {testResult !== '' && (
-          <View style={styles.testResultContainer}>
-            <Text style={styles.testResultText}>{testResult}</Text>
-          </View>
-        )}
-      </View>
 
       {/* Calendar Modal */}
       <Modal visible={showCalendar} animationType="slide" transparent={true}>
@@ -286,38 +188,17 @@ const Dashboard = () => {
             <Text style={styles.modalHeader}>Add {currentMealType}</Text>
             <TextInput
               style={styles.input}
-              placeholder="Dish Name"
-              placeholderTextColor="#A9A9A9"
-              value={dishName}
-              onChangeText={setDishName}
+              placeholder={`Enter your ${currentMealType}`}
+              value={mealInput}
+              onChangeText={setMealInput}
             />
-            <TextInput
-              style={styles.input}
-              placeholder="Add Ingredient"
-              placeholderTextColor="#A9A9A9"
-              onSubmitEditing={(e) => addIngredient(e.nativeEvent.text)}
-            />
-            <View>
-              {ingredients.map((ingredient, index) => (
-                <Text key={index} style={styles.ingredientText}>
-                  {ingredient}
-                </Text>
-              ))}
-            </View>
-            <Pressable style={styles.calculateButton} onPress={calculateCalories}>
-              <Text style={styles.calculateButtonText}>Calculate Calories</Text>
-            </Pressable>
-            {calories !== null && (
-              <Text style={styles.caloriesText}>Calories: {calories}</Text>
-            )}
-            <Pressable style={styles.saveButton} onPress={() => saveMeal({ name: dishName, ingredients, calories: calories || 0 })}>
-              <Text style={styles.saveButtonText}>Add Dish</Text>
+            <Pressable style={styles.saveButton} onPress={saveMeal}>
+              <Text style={styles.saveButtonText}>Save</Text>
             </Pressable>
           </View>
         </View>
       </Modal>
     </ScrollView>
-    </View>
   );
 };
 
@@ -325,30 +206,13 @@ const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
     backgroundColor: '#F9F9F9',
-    padding: 10,
+    padding: 20,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 20,
-  },
-  ingredientText: {
-    fontSize: 16,
-    color: '#4A4A4A',
-    marginBottom: 5,
-  },
-  calculateButton: {
-    backgroundColor: '#6E2F2C',
-    padding: 10,
-    borderRadius: 5,
-    alignItems: 'center',
-    marginTop: 10,
-  },
-  calculateButtonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: 'bold',
   },
   appName: {
     fontSize: 20,
@@ -408,7 +272,10 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     padding: 20,
     marginBottom: 20,
-    boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
     elevation: 2,
   },
   mealTitle: {
@@ -460,7 +327,6 @@ const styles = StyleSheet.create({
     padding: 10,
     marginBottom: 20,
     fontSize: 16,
-    color: 'black',
   },
   saveButton: {
     backgroundColor: '#6E2F2C',
@@ -509,49 +375,6 @@ const styles = StyleSheet.create({
   selectedCalendarDayText: {
     color: 'white',
   },
-  testSection: {
-    backgroundColor: 'white',
-    borderRadius: 10,
-    padding: 20,
-    marginTop: 20,
-    marginBottom: 40,
-    elevation: 2,
-  },
-  testSectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#4A4A4A',
-    marginBottom: 15,
-  },
-  testButton: {
-    backgroundColor: '#6E2F2C',
-    padding: 12,
-    borderRadius: 5,
-    alignItems: 'center',
-  },
-  testButtonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  testLoading: {
-    marginTop: 15,
-  },
-  testResultContainer: {
-    backgroundColor: '#F5F5F5',
-    padding: 15,
-    borderRadius: 5,
-    marginTop: 15,
-  },
-  testResultText: {
-    fontSize: 14,
-    color: '#4A4A4A',
-  },
-  caloriesText: {
-    fontSize: 16,
-    color: '#4A4A4A',
-    marginTop: 10,
-  },
 });
 
-export default Dashboard;
+export default Scheduler;

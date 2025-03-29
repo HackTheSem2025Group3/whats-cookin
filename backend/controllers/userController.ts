@@ -1,13 +1,13 @@
 import { Request, Response, NextFunction } from 'express';
 import User from '../models/User';
 
-// Get all users - with proper async/await handling
+// Get all users
 const getAllUsers = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
         const users = await User.find();
         res.status(200).json(users);
     } catch (error) {
-        next(error); // Pass error to error handling middleware
+        next(error); 
     }
 };
 
@@ -76,7 +76,6 @@ const deleteUser = async (req: Request, res: Response, next: NextFunction): Prom
     }
 };
 
-// Export as default object with all controller methods
 export default {
     getAllUsers,
     getUserById,

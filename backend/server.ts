@@ -5,7 +5,7 @@ import userRoutes from './routes/userRoutes';
 import dotenv from 'dotenv';
 
 
-// Load environment variables
+// Load environment variables from .env file
 dotenv.config();
 
 const app = express();
@@ -13,8 +13,8 @@ const PORT = process.env.PORT;
 const URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/MealPlanner'; 
 
 // Middleware
-app.use(cors()); // Enable CORS for all routes
-app.use(express.json()); // Parse JSON request bodies
+app.use(cors()); 
+app.use(express.json()); 
 
 // Routes
 app.use('/api/users', userRoutes);
