@@ -48,7 +48,7 @@ export const updateUserData = async (userId: string, userData: Partial<User>): P
  */
 export const calculateCalorieGoal = (weight: string, activityLevel: string): number => {
   const weightNum = parseFloat(weight);
-  if (isNaN(weightNum)) return 2000; // Default
+  if (isNaN(weightNum)) return 2000; 
   
   let multiplier = 1.2; // Default for Sedentary
   switch (activityLevel) {
