@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Pressable, ScrollView, FlatList, Modal, TextInput } from 'react-native';
+import { View, Text, StyleSheet, Pressable, ScrollView, FlatList, Modal, TextInput, ActivityIndicator } from 'react-native';
 import moment from 'moment';
+import { saveUserData } from '../services/userService'; // Import the userService
+import { User } from '../../shared/types/User'; 
 import axios from 'axios';
 // import './AddDishModal'
 import MainMenu from './MainMenu';
@@ -28,6 +30,17 @@ const Dashboard = () => {
 
   const [showMealModal, setShowMealModal] = useState(false);
   const [currentMealType, setCurrentMealType] = useState('');
+  const [testResult, setTestResult] = useState<string>('');
+  const [testLoading, setTestLoading] = useState(false);
+
+  interface Meals {
+    [date: string]: {
+      Breakfast: string;
+      Lunch: string;
+      Dinner: string;
+    };
+  }
+
   const [meals, setMeals] = useState<Meals>({});
   const [dishName, setDishName] = useState('');
   const [ingredients, setIngredients] = useState<string[]>([]);
@@ -141,6 +154,33 @@ const Dashboard = () => {
     );
   };
 
+  const testMongoConnection = async () => {
+    setTestLoading(true);
+    setTestResult('');
+    try {
+      const testUser: User = {
+        name: 'Test User1',
+        email: `test${Date.now()}@gmail.com`, // Unique email to avoid duplicates
+        activityLevel: "Sedentary" // Ensure this matches the allowed string literal type
+      };
+      
+      const response = await saveUserData(testUser);
+      setTestResult(`Success! Created user with ID: ${response._id}`);
+      console.log('Connection test succeeded:', response);
+    } catch (error: any) {
+      if (error.message.includes('Network Error')) {
+        setTestResult('Error: Cannot connect to the backend server. Make sure your Express server is running.');
+      } else if (error.response) {
+        setTestResult(`Server responded with error: ${error.response.status} - ${error.response.data.message || 'Unknown error'}`);
+      } else {
+        setTestResult(`Error: ${error.message}`);
+      }
+      console.error('Connection test failed:', error);
+    } finally {
+      setTestLoading(false);
+    }
+  };
+
   return (
     <View style={styles.container}>
     <ScrollView contentContainerStyle={styles.container}>
@@ -177,6 +217,7 @@ const Dashboard = () => {
           >
             <Text
               style={[
+                styles.dayText,
                 selectedDate === item ? styles.selectedDateText : styles.unselectedDateText, // Change text color dynamically
               ]}
             >
@@ -195,18 +236,41 @@ const Dashboard = () => {
       />
 
       {/* Meal Sections */}
-      {['Breakfast', 'Lunch', 'Dinner'].map((meal, index) => (
+      {(['Breakfast', 'Lunch', 'Dinner'] as Array<keyof Meals[string]>).map((meal, index) => (
         <View key={index} style={styles.mealSection}>
           <Text style={styles.mealTitle}>{meal}</Text>
           <Text style={styles.mealContent}>
-            {meals[selectedDate]?.[meal]?.map((dish) => dish.name).join(', ') ||
-              `No ${meal} added for ${moment(selectedDate).format('MMMM D')}`}
+            {meals[selectedDate]?.[meal as keyof Meals[string]] || `No ${meal} added for ${moment(selectedDate).format('MMMM D')}`}
           </Text>
           <Pressable style={styles.addButton} onPress={() => handleAddMeal(meal)}>
             <Text style={styles.addButtonText}>+ Add {meal}</Text>
           </Pressable>
         </View>
       ))}
+
+      {/* MongoDB Connection Test Section */}
+      <View style={styles.testSection}>
+        <Text style={styles.testSectionTitle}>Backend Connection Test</Text>
+        <Pressable 
+          style={styles.testButton}
+          onPress={testMongoConnection}
+          disabled={testLoading}
+        >
+          <Text style={styles.testButtonText}>
+            {testLoading ? 'Testing Connection...' : 'Test MongoDB Connection'}
+          </Text>
+        </Pressable>
+        
+        {testLoading && (
+          <ActivityIndicator style={styles.testLoading} color="#6E2F2C" />
+        )}
+        
+        {testResult !== '' && (
+          <View style={styles.testResultContainer}>
+            <Text style={styles.testResultText}>{testResult}</Text>
+          </View>
+        )}
+      </View>
 
       {/* Calendar Modal */}
       <Modal visible={showCalendar} animationType="slide" transparent={true}>
@@ -327,10 +391,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     padding: 20,
     marginBottom: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
     elevation: 2,
   },
   mealTitle: {
@@ -431,52 +492,44 @@ const styles = StyleSheet.create({
   selectedCalendarDayText: {
     color: 'white',
   },
-  ingredientText: {
-    fontSize: 16,
-    color: '#4A4A4A',
-    marginVertical: 5,
+  testSection: {
+    backgroundColor: 'white',
+    borderRadius: 10,
+    padding: 20,
+    marginTop: 20,
+    marginBottom: 40,
+    elevation: 2,
   },
-  calculateButton: {
+  testSectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#4A4A4A',
+    marginBottom: 15,
+  },
+  testButton: {
     backgroundColor: '#6E2F2C',
-    padding: 10,
+    padding: 12,
     borderRadius: 5,
     alignItems: 'center',
-    marginVertical: 10,
   },
-  calculateButtonText: {
+  testButtonText: {
     color: 'white',
     fontSize: 16,
     fontWeight: 'bold',
   },
-  caloriesText: {
-    fontSize: 16,
+  testLoading: {
+    marginTop: 15,
+  },
+  testResultContainer: {
+    backgroundColor: '#F5F5F5',
+    padding: 15,
+    borderRadius: 5,
+    marginTop: 15,
+  },
+  testResultText: {
+    fontSize: 14,
     color: '#4A4A4A',
-    marginVertical: 10,
-  },
-  groceryButton: {
-    backgroundColor: '#4CAF50',
-    padding: 10,
-    borderRadius: 5,
-    alignItems: 'center',
-    marginVertical: 10,
-  },
-  groceryButtonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  recommendationButton: {
-    backgroundColor: '#2196F3',
-    padding: 10,
-    borderRadius: 5,
-    alignItems: 'center',
-    marginVertical: 10,
-  },
-  recommendationButtonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: 'bold',
   },
 });
 
-export default Dashboard;
+export default Scheduler;

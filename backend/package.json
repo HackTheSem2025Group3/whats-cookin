@@ -1,0 +1,20 @@
+{
+  "name": "whats-cookin-backend",
+  "version": "1.0.0",
+  "main": "server.ts",
+  "scripts": {
+    "dev": "ts-node --esm server.ts",
+    "start": "node dist/server.js",
+    "build": "tsc"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.21.2",
+    "mongoose": "^8.13.0"
+  },
+  "devDependencies": {
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3"
+  },
+  "type": "commonjs"
+}
